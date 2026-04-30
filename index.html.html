@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enchanté — Pricing Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --cream: #f5f0e8; --cream-dark: #ede6d8; --cream-border: #d6ccb8;
+    --olive: #4a5240; --olive-light: #6b7560; --olive-pale: #8a9478;
+    --gold: #b5933a; --gold-light: #d4af6a;
+    --valentine: #8b3a5a; --valentine-light: #c4728e;
+    --mothers: #4a7a5a; --mothers-light: #7ab890;
+    --danger: #a05050; --success: #4a6b5a;
+  }
+  body { font-family: 'Jost', sans-serif; background: var(--cream); color: var(--olive); min-height: 100vh; font-size: 14px; line-height: 1.6; }
+
+  .header { background: var(--olive); color: var(--cream); padding: 18px 24px 14px; display: flex; align-items: center; gap: 14px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
+  .header-logo { width: 40px; height: 40px; background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Cormorant Garamond', serif; font-size: 20px; color: var(--olive); font-weight: 500; flex-shrink: 0; }
+  .header-text h1 { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 400; color: var(--gold-light); letter-spacing: 0.02em; }
+  .header-text p { font-size: 10px; font-weight: 300; color: var(--cream-border); letter-spacing: 0.12em; text-transform: uppercase; margin-top: 1px; }
+
+  .container { max-width: 780px; margin: 0 auto; padding: 20px 16px 80px; }
+
+  .top-tabs { display: flex; gap: 0; margin-bottom: 16px; border-bottom: 2px solid var(--cream-border); overflow-x: auto; }
+  .top-tab { padding: 9px 14px; border: none; background: none; font-family: 'Jost', sans-serif; font-size: 12px; letter-spacing: 0.07em; text-transform: uppercase; font-weight: 500; color: var(--olive-pale); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.15s; white-space: nowrap; }
+  .top-tab.active { color: var(--olive); border-bottom-color: var(--gold); }
+  .top-tab.valentine.active { color: var(--valentine); border-bottom-color: var(--valentine); }
+  .top-tab.mothers.active { color: var(--mothers); border-bottom-color: var(--mothers); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .mode-strip { display: flex; gap: 8px; margin-bottom: 16px; }
+  .mode-btn { flex: 1; padding: 10px 6px; border: 1.5px solid var(--cream-border); border-radius: 8px; background: white; color: var(--olive-pale); font-family: 'Jost', sans-serif; font-size: 12px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; text-align: center; }
+  .mode-btn.active { background: var(--olive); border-color: var(--olive); color: var(--gold-light); }
+  .mode-btn.active.val-mode { background: var(--valentine); border-color: var(--valentine); color: white; }
+  .mode-btn.active.mom-mode { background: var(--mothers); border-color: var(--mothers); color: white; }
+  .mode-btn:hover:not(.active) { border-color: var(--olive-pale); color: var(--olive); }
+  .mode-btn .mode-mult { display: block; font-size: 16px; font-family: 'Cormorant Garamond', serif; font-weight: 300; margin-bottom: 1px; letter-spacing: 0; }
+
+  .search-wrap { position: relative; margin-bottom: 14px; }
+  .search-input { width: 100%; padding: 10px 36px; border: 1.5px solid var(--cream-border); border-radius: 8px; background: white; font-family: 'Jost', sans-serif; font-size: 13px; color: var(--olive); outline: none; transition: border-color 0.2s; }
+  .search-input:focus { border-color: var(--olive-pale); }
+  .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; pointer-events: none; }
+  .search-clear { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 18px; color: var(--olive-pale); cursor: pointer; display: none; line-height: 1; }
+
+  .section { background: white; border-radius: 12px; border: 1px solid var(--cream-border); margin-bottom: 10px; overflow: hidden; }
+  .section-header { padding: 11px 16px; background: var(--cream-dark); border-bottom: 1px solid var(--cream-border); font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 400; letter-spacing: 0.05em; color: var(--olive); display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+  .section-header .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
+  .section-header.val-dot .dot { background: var(--valentine-light); }
+  .section-header.mom-dot .dot { background: var(--mothers-light); }
+  .section-header .toggle-icon { margin-left: auto; font-size: 16px; color: var(--olive-pale); transition: transform 0.2s; }
+  .section-header.collapsed .toggle-icon { transform: rotate(-90deg); }
+  .section-body { padding: 8px 16px; }
+  .section-body.hidden { display: none; }
+
+  .flower-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--cream-dark); }
+  .flower-row:last-child { border-bottom: none; }
+  .flower-row.hidden-row { display: none; }
+  .flower-name { flex: 1; font-size: 13px; color: var(--olive); font-weight: 400; }
+  .flower-pps { font-size: 11px; color: var(--olive-pale); font-weight: 300; min-width: 52px; text-align: right; }
+  .qty-ctrl { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+  .qty-btn { width: 26px; height: 26px; border: 1px solid var(--cream-border); border-radius: 6px; background: var(--cream); color: var(--olive); font-size: 16px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; padding: 0; font-family: 'Jost', sans-serif; }
+  .qty-btn:hover { background: var(--olive); color: var(--cream); border-color: var(--olive); }
+  .qty-val { width: 32px; text-align: center; font-size: 14px; font-weight: 500; color: var(--olive); }
+  .flower-cost { min-width: 52px; text-align: right; font-size: 12px; color: var(--gold); font-weight: 400; }
+
+  .alert { padding: 10px 14px; border-radius: 8px; font-size: 12px; margin-bottom: 12px; display: none; align-items: center; gap: 8px; }
+  .alert.show { display: flex; }
+  .alert-warn { background: #fdf6ec; border: 1px solid #e8c97a; color: #8a6820; }
+  .alert-danger { background: #fdf0f0; border: 1px solid #e8a0a0; color: var(--danger); }
+
+  .price-panel { border-radius: 14px; padding: 20px 20px 16px; color: var(--cream); margin-bottom: 14px; position: relative; overflow: hidden; background: var(--olive); }
+  .price-panel.valentine-panel { background: var(--valentine); }
+  .price-panel.mothers-panel { background: var(--mothers); }
+  .price-panel::before { content: ''; position: absolute; top: -20px; right: -20px; width: 100px; height: 100px; border-radius: 50%; background: rgba(255,255,255,0.07); }
+  .price-label { font-size: 10px; font-weight: 300; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
+  .price-value { font-family: 'Cormorant Garamond', serif; font-size: 52px; font-weight: 300; color: var(--gold-light); line-height: 1; }
+  .price-panel.valentine-panel .price-value, .price-panel.mothers-panel .price-value { color: rgba(255,255,255,0.95); }
+  .price-currency { font-size: 22px; font-weight: 300; vertical-align: super; margin-right: 2px; }
+  .price-meta { display: flex; gap: 16px; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1); }
+  .price-meta-item { font-size: 11px; }
+  .price-meta-item span { display: block; color: rgba(255,255,255,0.4); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .mode-badge { position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); color: rgba(255,255,255,0.9); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; }
+  .filler-bar-wrap { height: 4px; background: rgba(255,255,255,0.15); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+  .filler-bar { height: 100%; border-radius: 4px; background: rgba(255,255,255,0.5); transition: width 0.4s, background 0.3s; }
+  .filler-pct-row { display: flex; justify-content: space-between; font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 3px; }
+
+  .actions { display: flex; gap: 8px; margin-bottom: 14px; }
+  .btn { flex: 1; padding: 11px; border-radius: 8px; border: none; font-family: 'Jost', sans-serif; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; font-weight: 500; transition: all 0.2s; }
+  .btn-primary { background: var(--gold); color: white; }
+  .btn-primary:hover { background: var(--gold-light); }
+  .btn-primary.val-btn { background: var(--valentine); }
+  .btn-primary.mom-btn { background: var(--mothers); }
+  .btn-secondary { background: var(--cream-dark); color: var(--olive); border: 1px solid var(--cream-border); }
+  .btn-secondary:hover { background: var(--cream-border); }
+  .btn-ghost { background: transparent; color: var(--olive-pale); border: 1px solid var(--cream-border); }
+  .btn-ghost:hover { color: var(--olive); border-color: var(--olive-pale); }
+
+  .per-stem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+  .stem-card { background: var(--cream); border: 1px solid var(--cream-border); border-radius: 8px; padding: 10px 12px; }
+  .stem-card-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--olive-pale); margin-bottom: 4px; }
+  .stem-card-price { font-family: 'Cormorant Garamond', serif; font-size: 18px; color: var(--gold); }
+
+  .modal-overlay { position: fixed; inset: 0; background: rgba(50,55,45,0.6); backdrop-filter: blur(4px); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.open { display: flex; }
+  .card-modal { background: var(--cream); border-radius: 16px; max-width: 380px; width: 100%; padding: 28px 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
+  .card-header { text-align: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--cream-border); }
+  .card-brand { font-family: 'Cormorant Garamond', serif; font-size: 28px; color: var(--gold); font-weight: 400; letter-spacing: 0.04em; }
+  .card-tagline { font-size: 10px; color: var(--olive-pale); letter-spacing: 0.14em; text-transform: uppercase; margin-top: 2px; }
+  .card-occasion { font-size: 13px; font-weight: 500; margin-top: 6px; letter-spacing: 0.06em; }
+  .card-title { font-size: 13px; font-weight: 500; color: var(--olive); margin-top: 4px; letter-spacing: 0.06em; }
+  .card-section { margin-bottom: 14px; }
+  .card-section-label { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .card-section-label::after { content: ''; flex: 1; height: 1px; background: var(--cream-border); }
+  .card-item { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; font-size: 12px; color: var(--olive); }
+  .card-item-qty { width: 28px; text-align: center; font-weight: 500; color: var(--gold); }
+  .card-footer { border-top: 1px solid var(--cream-border); padding-top: 14px; margin-top: 10px; }
+  .card-footer-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--olive-pale); margin-bottom: 4px; }
+  .card-footer-price { display: flex; justify-content: space-between; align-items: baseline; font-family: 'Cormorant Garamond', serif; font-size: 26px; color: var(--olive); margin-top: 6px; }
+  .card-motto { text-align: center; font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 13px; color: var(--olive-pale); margin-top: 14px; }
+  .modal-actions { display: flex; gap: 8px; margin-top: 16px; }
+
+  .no-results { text-align: center; padding: 20px; color: var(--olive-pale); font-style: italic; font-family: 'Cormorant Garamond', serif; font-size: 15px; display: none; }
+  .no-results.show { display: block; }
+
+  @media print {
+    .no-print { display: none !important; }
+    .modal-overlay { position: static; background: none; padding: 0; }
+    .card-modal { box-shadow: none; border: 1px solid var(--cream-border); max-height: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header no-print">
+  <div class="header-logo">É</div>
+  <div class="header-text">
+    <h1>Enchanté</h1>
+    <p>Pricing Tool — Where Nature Flourishes</p>
+  </div>
+</div>
+
+<div class="container no-print">
+
+  <div class="top-tabs">
+    <button class="top-tab active" onclick="switchTopTab('standard',this)">🌿 Standard</button>
+    <button class="top-tab valentine" onclick="switchTopTab('valentine',this)">💝 Valentine's</button>
+    <button class="top-tab mothers" onclick="switchTopTab('mothers',this)">💐 Mother's Day</button>
+    <button class="top-tab" onclick="switchTopTab('perstem',this)">Per Stem</button>
+  </div>
+
+  <!-- STANDARD -->
+  <div id="tab-standard" class="tab-content active">
+    <div class="mode-strip">
+      <button class="mode-btn active" onclick="setMode('walkin',this,'standard')"><span class="mode-mult">3.3×</span>Walk-in</button>
+      <button class="mode-btn" onclick="setMode('curated',this,'standard')"><span class="mode-mult">3.6×</span>Curated</button>
+      <button class="mode-btn" onclick="setMode('event',this,'standard')"><span class="mode-mult">4.0×</span>Event</button>
+    </div>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" id="search-standard" type="text" placeholder="Search flowers..." oninput="filterFlowers('standard',this.value)">
+      <button class="search-clear" id="clear-standard" onclick="clearSearch('standard')">×</button>
+    </div>
+    <div class="alert alert-warn" id="alert-filler-standard">⚠️ Fillers exceed 40% — consider adding more focal flowers</div>
+    <div class="alert alert-danger" id="alert-margin-standard">⛔ Bouquet total seems very low — check quantities</div>
+    <div class="price-panel" id="panel-standard">
+      <div class="mode-badge" id="badge-standard">Walk-in</div>
+      <div class="price-label">Final Bouquet Price</div>
+      <div class="price-value"><span class="price-currency">KES</span><span id="price-standard">0</span></div>
+      <div class="price-meta">
+        <div class="price-meta-item"><span>Total Stems</span><span id="stems-standard">0</span></div>
+        <div class="price-meta-item"><span>Filler %</span><span id="fillerpct-standard">0%</span></div>
+      </div>
+      <div class="filler-bar-wrap"><div class="filler-bar" id="fillerbar-standard" style="width:0%"></div></div>
+      <div class="filler-pct-row"><span>Fillers & texture</span><span>40% max</span></div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="openCard('standard')">🌸 Bouquet Card</button>
+      <button class="btn btn-secondary" onclick="clearAll('standard')">Clear All</button>
+    </div>
+    <div class="no-results" id="noresults-standard">No flowers match your search</div>
+    <div id="sections-standard"></div>
+  </div>
+
+  <!-- VALENTINE'S -->
+  <div id="tab-valentine" class="tab-content">
+    <div class="mode-strip">
+      <button class="mode-btn active val-mode" onclick="setMode('walkin',this,'valentine')"><span class="mode-mult">4.5×</span>Walk-in</button>
+      <button class="mode-btn" onclick="setMode('curated',this,'valentine')"><span class="mode-mult">4.5×</span>Curated</button>
+      <button class="mode-btn" onclick="setMode('event',this,'valentine')"><span class="mode-mult">4.5×</span>Event</button>
+    </div>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" id="search-valentine" type="text" placeholder="Search flowers..." oninput="filterFlowers('valentine',this.value)">
+      <button class="search-clear" id="clear-valentine" onclick="clearSearch('valentine')">×</button>
+    </div>
+    <div class="alert alert-warn" id="alert-filler-valentine">⚠️ Fillers exceed 40% — consider adding more focal flowers</div>
+    <div class="alert alert-danger" id="alert-margin-valentine">⛔ Bouquet total seems very low — check quantities</div>
+    <div class="price-panel valentine-panel">
+      <div class="mode-badge" id="badge-valentine">Walk-in</div>
+      <div class="price-label">Final Bouquet Price — Valentine's Day</div>
+      <div class="price-value"><span class="price-currency">KES</span><span id="price-valentine">0</span></div>
+      <div class="price-meta">
+        <div class="price-meta-item"><span>Total Stems</span><span id="stems-valentine">0</span></div>
+        <div class="price-meta-item"><span>Filler %</span><span id="fillerpct-valentine">0%</span></div>
+      </div>
+      <div class="filler-bar-wrap"><div class="filler-bar" id="fillerbar-valentine" style="width:0%"></div></div>
+      <div class="filler-pct-row"><span>Fillers & texture</span><span>40% max</span></div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary val-btn" onclick="openCard('valentine')">💝 Bouquet Card</button>
+      <button class="btn btn-secondary" onclick="clearAll('valentine')">Clear All</button>
+    </div>
+    <div class="no-results" id="noresults-valentine">No flowers match your search</div>
+    <div id="sections-valentine"></div>
+  </div>
+
+  <!-- MOTHER'S DAY -->
+  <div id="tab-mothers" class="tab-content">
+    <div class="mode-strip">
+      <button class="mode-btn active mom-mode" onclick="setMode('walkin',this,'mothers')"><span class="mode-mult">4.5×</span>Walk-in</button>
+      <button class="mode-btn" onclick="setMode('curated',this,'mothers')"><span class="mode-mult">4.5×</span>Curated</button>
+      <button class="mode-btn" onclick="setMode('event',this,'mothers')"><span class="mode-mult">4.5×</span>Event</button>
+    </div>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" id="search-mothers" type="text" placeholder="Search flowers..." oninput="filterFlowers('mothers',this.value)">
+      <button class="search-clear" id="clear-mothers" onclick="clearSearch('mothers')">×</button>
+    </div>
+    <div class="alert alert-warn" id="alert-filler-mothers">⚠️ Fillers exceed 40% — consider adding more focal flowers</div>
+    <div class="alert alert-danger" id="alert-margin-mothers">⛔ Bouquet total seems very low — check quantities</div>
+    <div class="price-panel mothers-panel">
+      <div class="mode-badge" id="badge-mothers">Walk-in</div>
+      <div class="price-label">Final Bouquet Price — Mother's Day</div>
+      <div class="price-value"><span class="price-currency">KES</span><span id="price-mothers">0</span></div>
+      <div class="price-meta">
+        <div class="price-meta-item"><span>Total Stems</span><span id="stems-mothers">0</span></div>
+        <div class="price-meta-item"><span>Filler %</span><span id="fillerpct-mothers">0%</span></div>
+      </div>
+      <div class="filler-bar-wrap"><div class="filler-bar" id="fillerbar-mothers" style="width:0%"></div></div>
+      <div class="filler-pct-row"><span>Fillers & texture</span><span>40% max</span></div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary mom-btn" onclick="openCard('mothers')">💐 Bouquet Card</button>
+      <button class="btn btn-secondary" onclick="clearAll('mothers')">Clear All</button>
+    </div>
+    <div class="no-results" id="noresults-mothers">No flowers match your search</div>
+    <div id="sections-mothers"></div>
+  </div>
+
+  <!-- PER STEM -->
+  <div id="tab-perstem" class="tab-content">
+    <div class="section">
+      <div class="section-header"><div class="dot"></div>Suggested Selling Ranges</div>
+      <div class="section-body">
+        <div class="per-stem-grid">
+          <div class="stem-card"><div class="stem-card-title">Premium Stems</div><div class="stem-card-price">350 – 500</div><div style="font-size:10px;color:var(--olive-pale);margin-top:3px;">per stem</div></div>
+          <div class="stem-card"><div class="stem-card-title">Standard Stems</div><div class="stem-card-price">100 – 150</div><div style="font-size:10px;color:var(--olive-pale);margin-top:3px;">per stem</div></div>
+          <div class="stem-card" style="grid-column:1/-1"><div class="stem-card-title">Fillers & Texture</div><div class="stem-card-price">3 stems for 100</div><div style="font-size:10px;color:var(--olive-pale);margin-top:3px;">bundle pricing</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-header"><div class="dot"></div>Quick Reference — Cost Per Stem</div>
+      <div class="section-body" id="quick-ref"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Card Modal -->
+<div class="modal-overlay" id="card-modal">
+  <div class="card-modal">
+    <div class="card-header">
+      <div class="card-brand">Enchanté</div>
+      <div class="card-tagline">Where Nature Flourishes</div>
+      <div class="card-occasion" id="card-occasion-label"></div>
+      <div class="card-title">✦ Your Bouquet ✦</div>
+    </div>
+    <div id="card-body"></div>
+    <div class="card-motto">"Build your bouquet naturally."</div>
+    <div class="modal-actions no-print">
+      <button class="btn btn-primary" onclick="window.print()">🖨 Print</button>
+      <button class="btn btn-ghost" onclick="closeCard()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const ALL_FLOWERS = {
+  "Fillers & Texture": [
+    { name: "Everlasting",                         stems: 10, cost: 100  },
+    { name: "Craspedia",                           stems: 20, cost: 100  },
+    { name: "Purple Verbena",                      stems: 10, cost: 100  },
+    { name: "Lepidium",                            stems: 10, cost: 100  },
+    { name: "Statice",                             stems: 25, cost: 100  },
+    { name: "Munsella",                            stems: 10, cost: 100  },
+    { name: "Scabiosa",                            stems: 10, cost: 100  },
+    { name: "Eryngium",                            stems: 10, cost: 100  },
+    { name: "Cathamas",                            stems: 10, cost: 100  },
+    { name: "Asters",                              stems: 20, cost: 100  },
+    { name: "Asters (premium)",                    stems: 10, cost: 225  },
+    { name: "Chamomile Daisies",                   stems: 10, cost: 200  },
+    { name: "Tuberose",                            stems: 10, cost: 200  },
+    { name: "Solidago",                            stems: 25, cost: 350  },
+    { name: "Pink Baby's Breath",                  stems: 25, cost: 350  },
+    { name: "White Baby's Breath",                 stems: 25, cost: 350  },
+    { name: "Gypsophila",                          stems: 25, cost: 350  },
+    { name: "Limonium",                            stems: 25, cost: 250  },
+  ],
+  "Main Flowers": [
+    { name: "Carnations",                          stems: 10, cost: 250  },
+    { name: "Roses",                               stems: 20, cost: 200  },
+    { name: "Sweet William",                       stems: 10, cost: 150  },
+    { name: "Lisianthus",                          stems: 10, cost: 350  },
+    { name: "Campanula",                           stems: 10, cost: 250  },
+    { name: "Mathiola",                            stems: 10, cost: 200  },
+    { name: "Veronica",                            stems: 10, cost: 200  },
+    { name: "Delphinium",                          stems: 10, cost: 200  },
+    { name: "Sunflowers",                          stems: 10, cost: 300  },
+    { name: "Gerbera",                             stems: 10, cost: 200  },
+    { name: "CB Roses Standard (Credible Blooms)", stems: 1,  cost: 35   },
+    { name: "CB Roses Spray (Credible Blooms)",    stems: 1,  cost: 45   },
+  ],
+  "Premium & Focal": [
+    { name: "Standard Mums",                       stems: 10, cost: 250  },
+    { name: "Premium Mums",                        stems: 10, cost: 350  },
+    { name: "Kiwi",                                stems: 10, cost: 150  },
+    { name: "Calla Lilies",                        stems: 10, cost: 100  },
+    { name: "Asiatic Lilies",                      stems: 10, cost: 1200 },
+    { name: "Oriental Lilies",                     stems: 10, cost: 1400 },
+    { name: "Hydrangea",                           stems: 1,  cost: 150  },
+    { name: "Mabrisha",                            stems: 5,  cost: 450  },
+    { name: "Berries",                             stems: 25, cost: 200  },
+    { name: "Gladiolus",                           stems: 10, cost: 250  },
+    { name: "Birds of Paradise",                   stems: 1,  cost: 40   },
+  ],
+  "Greenery & Foliage": [
+    { name: "Eucalyptus",                          stems: 10, cost: 200  },
+    { name: "Leather Fern",                        stems: 10, cost: 100  },
+    { name: "Ruscus",                              stems: 10, cost: 175  },
+    { name: "Coprosma",                            stems: 25, cost: 200  },
+  ]
+};
+
+const OCCASION_NAMES = new Set([
+  "CB Roses Standard (Credible Blooms)", "CB Roses Spray (Credible Blooms)",
+  "Asiatic Lilies", "Oriental Lilies", "Calla Lilies",
+  "Gerbera", "Standard Mums", "Premium Mums",
+  "Pink Baby's Breath", "White Baby's Breath", "Gypsophila",
+  "Hydrangea", "Asters", "Asters (premium)",
+  "Sunflowers", "Carnations", "Chamomile Daisies", "Limonium",
+  "Eucalyptus", "Leather Fern", "Ruscus", "Coprosma"
+]);
+
+function getOccasionFlowers() {
+  const result = {};
+  for (const [cat, flowers] of Object.entries(ALL_FLOWERS)) {
+    const filtered = flowers.filter(f => OCCASION_NAMES.has(f.name));
+    if (filtered.length) result[cat] = filtered;
+  }
+  return result;
+}
+
+const FLOWER_SETS = {
+  standard: ALL_FLOWERS,
+  valentine: getOccasionFlowers(),
+  mothers: getOccasionFlowers()
+};
+
+const MARKUP = {
+  standard:  { walkin: 3.3, curated: 3.6, event: 4.0 },
+  valentine: { walkin: 4.5, curated: 4.5, event: 4.5 },
+  mothers:   { walkin: 4.5, curated: 4.5, event: 4.5 }
+};
+const MODE_LABELS = { walkin: 'Walk-in', curated: 'Curated', event: 'Event' };
+const FILLER_CATS = new Set(["Fillers & Texture", "Greenery & Foliage"]);
+let currentMode = { standard: 'walkin', valentine: 'walkin', mothers: 'walkin' };
+let quantities   = { standard: {}, valentine: {}, mothers: {} };
+
+function init() {
+  ['standard','valentine','mothers'].forEach(t => { buildSections(t); recalc(t); });
+  buildQuickRef();
+}
+
+function buildSections(tab) {
+  const container = document.getElementById('sections-' + tab);
+  container.innerHTML = '';
+  const isOccasion = tab !== 'standard';
+  for (const [cat, list] of Object.entries(FLOWER_SETS[tab])) {
+    const sec = document.createElement('div');
+    sec.className = 'section';
+    const dotClass = tab === 'valentine' ? 'val-dot' : tab === 'mothers' ? 'mom-dot' : '';
+    sec.innerHTML = `
+      <div class="section-header ${dotClass}" onclick="toggleSection(this)">
+        <div class="dot"></div>${cat}<span class="toggle-icon">▾</span>
+      </div>
+      <div class="section-body">
+        ${list.map(f => flowerRow(tab, cat, f)).join('')}
+      </div>`;
+    container.appendChild(sec);
+  }
+}
+
+function flowerRow(tab, cat, f) {
+  const key = cat + '|' + f.name;
+  const safe = (tab + '_' + key).replace(/[^a-zA-Z0-9]/g,'_');
+  const pps = (f.cost / f.stems).toFixed(1);
+  return `<div class="flower-row" data-name="${f.name.toLowerCase()}">
+    <div class="flower-name">${f.name}</div>
+    <div class="flower-pps">KES ${pps}/stem</div>
+    <div class="qty-ctrl">
+      <button class="qty-btn" onclick="adj('${tab}','${key}',-1)">−</button>
+      <div class="qty-val" id="qty-${safe}">0</div>
+      <button class="qty-btn" onclick="adj('${tab}','${key}',1)">+</button>
+    </div>
+    <div class="flower-cost" id="cost-${safe}">—</div>
+  </div>`;
+}
+
+function buildQuickRef() {
+  let html = '';
+  for (const [cat, flowers] of Object.entries(ALL_FLOWERS)) {
+    html += `<div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin:10px 0 4px;font-weight:600;">${cat}</div>`;
+    flowers.forEach(f => {
+      html += `<div class="flower-row"><div class="flower-name">${f.name}</div><div class="flower-cost" style="color:var(--olive);">KES ${(f.cost/f.stems).toFixed(1)}/stem</div></div>`;
+    });
+  }
+  document.getElementById('quick-ref').innerHTML = html;
+}
+
+function adj(tab, key, delta) {
+  quantities[tab][key] = Math.max(0, (quantities[tab][key] || 0) + delta);
+  const safe = (tab + '_' + key).replace(/[^a-zA-Z0-9]/g,'_');
+  document.getElementById('qty-' + safe).textContent = quantities[tab][key];
+  recalc(tab);
+}
+
+function setMode(mode, btn, tab) {
+  currentMode[tab] = mode;
+  btn.closest('.mode-strip').querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('badge-' + tab).textContent = MODE_LABELS[mode];
+  recalc(tab);
+}
+
+function toggleSection(header) {
+  header.classList.toggle('collapsed');
+  header.nextElementSibling.classList.toggle('hidden');
+}
+
+function switchTopTab(tab, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.top-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  btn.classList.add('active');
+}
+
+function clearAll(tab) {
+  quantities[tab] = {};
+  const p1 = 'qty-' + tab + '_', p2 = 'cost-' + tab + '_';
+  document.querySelectorAll(`[id^="${p1}"]`).forEach(e => e.textContent = '0');
+  document.querySelectorAll(`[id^="${p2}"]`).forEach(e => e.textContent = '—');
+  recalc(tab);
+}
+
+function filterFlowers(tab, query) {
+  const q = query.toLowerCase().trim();
+  document.getElementById('clear-' + tab).style.display = q ? 'block' : 'none';
+  const container = document.getElementById('sections-' + tab);
+  let anyVisible = false;
+  container.querySelectorAll('.section').forEach(sec => {
+    let secVisible = false;
+    sec.querySelectorAll('.flower-row').forEach(row => {
+      const match = !q || (row.dataset.name || '').includes(q);
+      row.classList.toggle('hidden-row', !match);
+      if (match) { secVisible = true; anyVisible = true; }
+    });
+    sec.style.display = secVisible ? '' : 'none';
+    if (q && secVisible) {
+      sec.querySelector('.section-header').classList.remove('collapsed');
+      sec.querySelector('.section-body').classList.remove('hidden');
+    }
+  });
+  document.getElementById('noresults-' + tab).classList.toggle('show', !anyVisible && q.length > 0);
+}
+
+function clearSearch(tab) {
+  document.getElementById('search-' + tab).value = '';
+  filterFlowers(tab, '');
+}
+
+function recalc(tab) {
+  let totalCost = 0, totalStems = 0, fillerStems = 0;
+  for (const [cat, list] of Object.entries(FLOWER_SETS[tab])) {
+    list.forEach(f => {
+      const key = cat + '|' + f.name;
+      const qty = quantities[tab][key] || 0;
+      const pps = f.cost / f.stems;
+      const lineCost = pps * qty;
+      const safe = (tab + '_' + key).replace(/[^a-zA-Z0-9]/g,'_');
+      const el = document.getElementById('cost-' + safe);
+      if (el) el.textContent = qty > 0 ? `KES ${Math.round(lineCost)}` : '—';
+      totalCost += lineCost; totalStems += qty;
+      if (FILLER_CATS.has(cat)) fillerStems += qty;
+    });
+  }
+  const mult = MARKUP[tab][currentMode[tab]];
+  const finalPrice = totalStems === 0 ? 0 : Math.ceil(totalCost * mult / 50) * 50;
+  document.getElementById('price-' + tab).textContent = finalPrice.toLocaleString();
+  document.getElementById('stems-' + tab).textContent = totalStems;
+  const pct = totalStems > 0 ? Math.round(fillerStems / totalStems * 100) : 0;
+  document.getElementById('fillerpct-' + tab).textContent = pct + '%';
+  const bar = document.getElementById('fillerbar-' + tab);
+  bar.style.width = Math.min(pct, 100) + '%';
+  bar.style.background = pct > 40 ? 'rgba(255,150,80,0.8)' : 'rgba(255,255,255,0.5)';
+  document.getElementById('alert-filler-' + tab).classList.toggle('show', pct > 40 && totalStems > 0);
+  document.getElementById('alert-margin-' + tab).classList.toggle('show', finalPrice > 0 && finalPrice < 300);
+}
+
+function openCard(tab) {
+  const mult = MARKUP[tab][currentMode[tab]];
+  let totalStems = 0, totalCost = 0;
+  const ps = [], ss = [], fg = [];
+  for (const [cat, list] of Object.entries(FLOWER_SETS[tab])) {
+    list.forEach(f => {
+      const key = cat + '|' + f.name;
+      const qty = quantities[tab][key] || 0;
+      if (!qty) return;
+      totalStems += qty; totalCost += (f.cost / f.stems) * qty;
+      if (cat === 'Premium & Focal') ps.push({qty, name: f.name});
+      else if (cat === 'Main Flowers') ss.push({qty, name: f.name});
+      else fg.push({qty, name: f.name});
+    });
+  }
+  if (!totalStems) { alert('Please add some flowers first!'); return; }
+  const finalPrice = Math.ceil(totalCost * mult / 50) * 50;
+  const occasionLabel = tab === 'valentine' ? '💝 Valentine\'s Day' : tab === 'mothers' ? '💐 Mother\'s Day' : '';
+  const occasionEl = document.getElementById('card-occasion-label');
+  occasionEl.textContent = occasionLabel;
+  occasionEl.style.color = tab === 'valentine' ? 'var(--valentine)' : tab === 'mothers' ? 'var(--mothers)' : '';
+  let body = '';
+  if (ps.length) { body += `<div class="card-section"><div class="card-section-label">PS — Premium Stems</div>${ps.map(i=>`<div class="card-item"><span class="card-item-qty">${i.qty}</span><span>${i.name}</span></div>`).join('')}</div>`; }
+  if (ss.length) { body += `<div class="card-section"><div class="card-section-label">SS — Standard Stems</div>${ss.map(i=>`<div class="card-item"><span class="card-item-qty">${i.qty}</span><span>${i.name}</span></div>`).join('')}</div>`; }
+  if (fg.length) { body += `<div class="card-section"><div class="card-section-label">FG — Fillers & Greenery</div>${fg.map(i=>`<div class="card-item"><span class="card-item-qty">${i.qty}</span><span>${i.name}</span></div>`).join('')}</div>`; }
+  body += `<div class="card-footer"><div class="card-footer-row"><span>Total Stems</span><span>${totalStems}</span></div><div class="card-footer-price"><span>Total</span><span>KES ${finalPrice.toLocaleString()}</span></div></div>`;
+  document.getElementById('card-body').innerHTML = body;
+  document.getElementById('card-modal').classList.add('open');
+}
+
+function closeCard() { document.getElementById('card-modal').classList.remove('open'); }
+document.getElementById('card-modal').addEventListener('click', function(e) { if (e.target === this) closeCard(); });
+
+init();
+</script>
+</body>
+</html>
